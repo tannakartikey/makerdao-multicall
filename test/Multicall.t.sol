@@ -1,21 +1,32 @@
 pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "ds-test/test.sol";
-import "./Multicall.sol";
+import "forge-std/Test.sol";
+import "../src/Multicall.sol";
 
 contract Store {
     uint256 internal val;
-    function set(uint256 _val) public { val = _val; }
-    function get() public view returns (uint256) { return val; }
-    function getAnd10() public view returns (uint256, uint256) { return (val, 10); }
-    function getAdd(uint256 _val) public view returns (uint256) { return val + _val; }
+
+    function set(uint256 _val) public {
+        val = _val;
+    }
+
+    function get() public view returns (uint256) {
+        return val;
+    }
+
+    function getAnd10() public view returns (uint256, uint256) {
+        return (val, 10);
+    }
+
+    function getAdd(uint256 _val) public view returns (uint256) {
+        return val + _val;
+    }
 }
 
 // We inherit from Multicall rather than deploy an instance because solidity
 // can't return dynamically sized byte arrays from external contracts
 contract MulticallTest is DSTest, Multicall {
-
     Store public storeA;
     Store public storeB;
 
@@ -32,6 +43,14 @@ contract MulticallTest is DSTest, Multicall {
         assertEq(storeA.get(), 0);
     }
 
+    function test_aggregate_with_empty_calls_return_empty_array() public {
+      Call[] memory _calls = new Call[](0);
+
+      (, bytes[] memory _returnData) = aggregate(_calls);
+
+      assertEq(_returnData.length, 0);
+    }
+
     function test_single_call_single_return_no_args() public {
         storeA.set(123);
 
@@ -43,7 +62,9 @@ contract MulticallTest is DSTest, Multicall {
 
         bytes memory _word = _returnData[0];
         uint256 _returnVal;
-        assembly { _returnVal := mload(add(0x20, _word)) }
+        assembly {
+            _returnVal := mload(add(0x20, _word))
+        }
 
         assertEq(_returnVal, 123);
     }
@@ -64,8 +85,12 @@ contract MulticallTest is DSTest, Multicall {
         bytes memory _wordB = _returnData[1];
         uint256 _returnValA;
         uint256 _returnValB;
-        assembly { _returnValA := mload(add(0x20, _wordA)) }
-        assembly { _returnValB := mload(add(0x20, _wordB)) }
+        assembly {
+            _returnValA := mload(add(0x20, _wordA))
+        }
+        assembly {
+            _returnValB := mload(add(0x20, _wordB))
+        }
 
         assertEq(_returnValA, 123);
         assertEq(_returnValB, 321);
@@ -82,7 +107,9 @@ contract MulticallTest is DSTest, Multicall {
 
         bytes memory _word = _returnData[0];
         uint256 _returnVal;
-        assembly { _returnVal := mload(add(0x20, _word)) }
+        assembly {
+            _returnVal := mload(add(0x20, _word))
+        }
 
         assertEq(_returnVal, 124);
     }
@@ -103,8 +130,12 @@ contract MulticallTest is DSTest, Multicall {
         bytes memory _wordB = _returnData[1];
         uint256 _returnValA;
         uint256 _returnValB;
-        assembly { _returnValA := mload(add(0x20, _wordA)) }
-        assembly { _returnValB := mload(add(0x20, _wordB)) }
+        assembly {
+            _returnValA := mload(add(0x20, _wordA))
+        }
+        assembly {
+            _returnValB := mload(add(0x20, _wordB))
+        }
 
         assertEq(_returnValA, 124);
         assertEq(_returnValB, 322);
@@ -122,12 +153,15 @@ contract MulticallTest is DSTest, Multicall {
         bytes memory _words = _returnData[0];
         uint256 _returnValA1;
         uint256 _returnValA2;
-        assembly { _returnValA1 := mload(add(0x20, _words)) }
-        assembly { _returnValA2 := mload(add(0x40, _words)) }
+        assembly {
+            _returnValA1 := mload(add(0x20, _words))
+        }
+        assembly {
+            _returnValA2 := mload(add(0x40, _words))
+        }
 
         assertEq(_returnValA1, 123);
         assertEq(_returnValA2, 10);
-
     }
 
     function test_helpers() public {
