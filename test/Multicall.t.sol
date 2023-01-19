@@ -2,7 +2,7 @@ pragma solidity >=0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "forge-std/Test.sol";
-import "./Multicall.sol";
+import "../src/Multicall.sol";
 
 contract Store {
     uint256 internal val;
@@ -41,6 +41,14 @@ contract MulticallTest is DSTest, Multicall {
         assertEq(storeA.get(), 100);
         storeA.set(0);
         assertEq(storeA.get(), 0);
+    }
+
+    function test_aggregate_with_empty_calls_return_empty_array() public {
+      Call[] memory _calls = new Call[](0);
+
+      (, bytes[] memory _returnData) = aggregate(_calls);
+
+      assertEq(_returnData.length, 0);
     }
 
     function test_single_call_single_return_no_args() public {
